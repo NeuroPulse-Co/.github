@@ -1,0 +1,40 @@
+name: Study proposal
+description: Propose a new study. Write the success criterion before any results exist.
+title: "[study] "
+labels: [study]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A study answers **one** question. See [RECORDS.md](https://github.com/NeuroPulse-Co/.github/blob/main/standards/RECORDS.md).
+        Once agreed, create it with `uv run tools/record.py new <study-id> --workstream Wn --owner "Name"`
+        and copy these answers into `study.yaml` (criterion: pre_registered).
+  - type: input
+    id: study_id
+    attributes: {label: Study id, description: "lowercase-with-hyphens, e.g. til-hardfreeze-splitmnist"}
+    validations: {required: true}
+  - type: dropdown
+    id: workstream
+    attributes:
+      label: Workstream
+      options: [W0 Foundations, W1 Reproducing ASF-S, W2 AFC pruning protocol, "W3 Continual learning: hard freezing", "W4 Continual learning: metaplastic soft consolidation", W5 Benchmarking and thesis]
+    validations: {required: true}
+  - type: input
+    id: owner
+    attributes: {label: Owner, description: A name from standards/people.yaml}
+    validations: {required: true}
+  - type: textarea
+    id: question
+    attributes: {label: Question, description: The single question this study answers, in one or two full sentences.}
+    validations: {required: true}
+  - type: textarea
+    id: hypothesis
+    attributes: {label: Hypothesis, description: What we expect, and why.}
+    validations: {required: true}
+  - type: textarea
+    id: criterion
+    attributes: {label: Success criterion, description: "The measurable result that confirms the hypothesis (metric, split, seeds, threshold)."}
+    validations: {required: true}
+  - type: textarea
+    id: plan
+    attributes: {label: Plan and cost, description: "Models, datasets, number of runs, rough GPU hours, and what we will do with each possible outcome."}

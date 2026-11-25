@@ -1,0 +1,21 @@
+# CI for this repo: tests for record.py and a parse check of every YAML file.
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml pytest
+      - run: pytest tools/tests -q
+      - name: YAML parses
+        run: |
+          python - <<'PY'
+          import pathlib, yaml
+          for p in pathlib.Path(".").rglob("*.y*ml"):
+              if ".git" not in p.parts:
+                  yaml.safe_load(p.read_text()); print("ok", p)
+          PY

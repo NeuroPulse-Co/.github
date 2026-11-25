@@ -1,0 +1,24 @@
+# Reusable workflow: asks the website repo to rebuild after showcase/ changed on main.
+# Needs SITE_DISPATCH_TOKEN (org secret): a fine-grained token with
+# "Contents: read and write" on NeuroPulse-Co/NeuroPulse-Co.github.io.
+name: notify-site
+on:
+  workflow_call:
+    secrets:
+      SITE_DISPATCH_TOKEN:
+        required: false
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: repository_dispatch to the website
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::SITE_DISPATCH_TOKEN is not set; the site will pick this up on its nightly build."
+            exit 0
+          fi
+          gh api repos/NeuroPulse-Co/NeuroPulse-Co.github.io/dispatches \
+            -f event_type=showcase-updated -f "client_payload[repo]=$REPO"

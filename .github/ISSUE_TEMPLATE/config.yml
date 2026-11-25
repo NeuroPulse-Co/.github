@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Record standard
+    url: https://github.com/NeuroPulse-Co/.github/blob/main/standards/RECORDS.md
+    about: How we record studies, runs and logs.

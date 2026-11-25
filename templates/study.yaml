@@ -1,0 +1,37 @@
+# studies/<id>/study.yaml: one per study. `record.py new` writes a blank copy; this file shows a filled one.
+# Rules: full sentences, abbreviations spelled out (STYLE.md). Field reference: standards/RECORDS.md.
+id: afcprune-s1                       # = folder name; lowercase letters, digits, hyphens
+title: "Does preserving functional connectivity pick better filters than simple scores?"
+workstream: W2                        # from standards/workstreams.yaml
+status: running                       # planned | running | closed-positive | closed-negative | closed-inconclusive | abandoned
+owner: [Dewmina Wijekoon]             # names from standards/people.yaml
+started: 2026-11-24
+summary: >-
+  We compare Principal Gradient Importance (PGI) with simple filter scores such as weight
+  magnitude, under one shared protocol and several pruning budgets.
+question: >-
+  At equal numbers of kept filters, does PGI select filters that keep more validation accuracy
+  than magnitude (L1), Taylor and batch-normalisation scale scores?
+hypothesis: >-
+  PGI should do better, because it ranks filters by how they shape the output layer's functional
+  connectivity rather than by their size.
+success_criterion: >-
+  PGI's mean validation accuracy over three seeds is within the 95% confidence interval of the
+  best simple score, or above it, at every budget.
+criterion: pre_registered             # post_hoc if this criterion was written after results existed
+code: [afcprune/afcprune, afcprune/experiments/run_s1.sh]
+# Optional
+paper_targets: {conv2net_75p8_dacc: -3.78}
+links: []                             # issues, papers, related studies
+# Required once status is closed-* (closed and verdict also for abandoned)
+# closed: 2026-11-24
+# verdict: >-
+#   PGI beats random selection but loses to Taylor, batch-normalisation scale and L1 ...
+# key_results:
+#   - label: "PGI (corrected), 75.8% of parameters removed, head-only recovery"
+#     value: -8.4
+#     unit: "accuracy change (points)"
+#     split: val                      # val | test: which data the number comes from
+#     n_seeds: 3
+#     std: 1.0                        # optional; or ci95: [low, high]
+#     compare: {label: "paper (Table 5)", value: -3.78}

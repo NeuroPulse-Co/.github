@@ -1,0 +1,19 @@
+# studies/<id>/runs/<run-id>/run.yaml
+# Normally written by `record.py run` and copied in by `record.py harvest`, never by hand.
+# Hand-written only to BACKFILL runs made before the standard existed. Then backfilled: true
+# and `source` says where the information came from. Shown here as a backfill example.
+id: 20261020-0900-server-run01        # YYYYMMDD-HHMM-<host>-<tag>; = folder name
+study: cifar10-repro
+author: Dewmina Wijekoon
+host: server
+started: 2026-10-20T09:00:00+05:30
+finished: null                        # null if unknown (backfill) or still running
+exit_code: null
+commit: 4409c30                       # short hash, or "unknown"
+dirty: null                           # true/false, null if unknown
+command: ./cifar10/run.sh 1 --protocol paper --run-id run01
+seed: 42                              # null if the run had no single seed
+backfilled: true
+source: "cifar10/LOG.md entry 2026-10-20 'Step 1'; outputs/run01/conv2net_paper/step1_train/gate.json"
+outputs_dir: ~/asfs_outputs/run01/conv2net_paper/step1_train
+# Optional: gpu, python, torch, branch, duration_min, config, notes, remote_outputs

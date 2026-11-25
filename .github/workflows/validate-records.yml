@@ -1,0 +1,24 @@
+# Reusable workflow: validates a research repo's records against standards/RECORDS.md.
+# Called from each repo's .github/workflows/records.yml:
+#   uses: NeuroPulse-Co/.github/.github/workflows/validate-records.yml@main
+name: validate-records
+on:
+  workflow_call:
+    inputs:
+      strict:
+        description: Treat warnings as errors
+        type: boolean
+        default: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: record.py check
+        env:
+          NP_REPO: ${{ github.event.repository.name }}
+        run: python tools/record.py check ${{ inputs.strict && '--strict' || '' }}
