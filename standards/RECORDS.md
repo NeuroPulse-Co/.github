@@ -114,7 +114,7 @@ Then fill in the fields marked TODO **before the first run**. A filled example i
 - `label`
 - `value` (a number)
 - `unit`
-- `split`, which is `val` or `test` and says which data the number comes from
+- `split`, which says which data the number comes from: `val`, `test`, or `none` for numbers not measured on data (parameter counts, passing tests)
 - `n_seeds`
 
 Each one may also have `std` or `ci95`, and `compare: {label, value}`, for example the paper's

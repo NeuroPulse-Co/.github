@@ -31,7 +31,8 @@ flowchart LR
 
 | Repository | What is in it |
 |---|---|
-| [ASF-S](https://github.com/NeuroPulse-Co/ASF-S) | Reproduction of ASF-S (W1) and the AFC pruning protocol (W2) |
+| [ASF-S](https://github.com/NeuroPulse-Co/ASF-S) | Reproducing ASF-S on CIFAR-10, CIFAR-100, MNIST and BERT (W1) |
+| [AFC-Prune](https://github.com/NeuroPulse-Co/AFC-Prune) | The AFC pruning protocol: functional-connectivity filter selection against simple scores (W2) |
 | [ASF-S_Hard_Freezing](https://github.com/NeuroPulse-Co/ASF-S_Hard_Freezing) | Continual learning with hard freezing (W3) |
 | [NeuroPulse-Co.github.io](https://github.com/NeuroPulse-Co/NeuroPulse-Co.github.io) | The project website |
 | [research-template](https://github.com/NeuroPulse-Co/research-template) | The starting point for every new research repository |
@@ -44,4 +45,4 @@ Every experiment belongs to a *study* with a question, a hypothesis and a succes
 ## Team
 
 **Students:** D.M.N.S. Gunarathna · W.B.S.S. Harinakshi · K.W.M.R.S.B. Wanigasooriya · S.W.G.M.Y.G.D.M. Wijekoon
-**Supervisors:** Dr. Charith Chitraranjan (internal) · Prof. Varuna de Silva (external)
+**Supervisor:** Dr. Charith Chitraranjan
