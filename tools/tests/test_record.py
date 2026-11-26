@@ -312,3 +312,15 @@ def test_tool_upgrade_does_not_stale_the_manifest(repo):
     mf = repo / "showcase/manifest.yaml"
     mf.write_text(mf.read_text().replace(f"record.py {record.VERSION}", "record.py 0.9.0"))
     assert rec(repo, "check") == 0
+
+
+def test_chart_can_combine_several_csvs(repo):
+    d, ev = _evidence_study(repo)
+    (d / "results/r2.csv").write_text("scope,method,seed,d_acc,note\npaper,pgi,44,-10.5,e\n")
+    ev[1]["source"] = ["results/r.csv", "results/r2.csv"]
+    fill_study(repo, "ev", evidence=ev)
+    assert rec(repo, "check") == 0
+    assert rec(repo, "promote", "ev") == 0
+    fm, _ = record.split_frontmatter((repo / "showcase/studies/ev.md").read_text())
+    assert len(fm["evidence"][1]["rows"]) == 4
+    assert fm["evidence"][1]["source_url"].endswith("/tree/main/studies/ev/results")

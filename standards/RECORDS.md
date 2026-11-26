@@ -135,6 +135,7 @@ to look at and what it means (see [STYLE.md](STYLE.md)).
 | `figure` | a PNG, SVG, JPG or WebP image | nothing | the image, such as a plot your code made |
 
 Charts and tables:
+- `source` may be a list of CSV files with the same columns, for example one results file per trained network; their rows are combined.
 - `filter: {column: value}` or `{column: [values]}` keeps only matching rows. At most 200 rows may remain.
 - `split` says which data the numbers come from: `val`, `test` or `none`.
 - A chart has one row per seed. The website draws every row as a dot, plus the mean and spread of each `x` group (`kind: dots`, the default), or the mean only as bars (`kind: bars`). Use dots whenever there is more than one seed, so readers see the spread.
