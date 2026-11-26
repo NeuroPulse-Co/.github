@@ -100,6 +100,7 @@ Then fill in the fields marked TODO **before the first run**. A filled example i
 | `closed` | when closed or abandoned | The date it closed. |
 | `verdict` | when closed or abandoned | Two or three sentences: what we concluded, or why we stopped. |
 | `key_results` | when closed | One to five headline numbers (see below). |
+| `evidence` | optional | The diagrams, charts, tables and figures on the study page (see below). |
 | `paper_targets`, `links` | optional | Numbers from a paper we compare against, and related links. |
 
 **Statuses.**
@@ -119,6 +120,57 @@ Then fill in the fields marked TODO **before the first run**. A filled example i
 
 Each one may also have `std` or `ci95`, and `compare: {label, value}`, for example the paper's
 number.
+
+### Evidence
+
+A study page leads with pictures. **`evidence`** lists them in reading order. Every item needs
+`type`, `source` (a path inside the study folder), a short `title`, and a `caption` that says what
+to look at and what it means (see [STYLE.md](STYLE.md)).
+
+| `type` | `source` | Also needs | Shown as |
+|---|---|---|---|
+| `diagram` | `diagrams/<name>.excalidraw.svg` | nothing | the drawing; how to make one is in [DIAGRAMS.md](DIAGRAMS.md) |
+| `chart` | a CSV file | `x`, `y`, `y_label`, `split` | a chart drawn by the website |
+| `table` | a CSV file | `columns`, `split` | a table |
+| `figure` | a PNG, SVG, JPG or WebP image | nothing | the image, such as a plot your code made |
+
+Charts and tables:
+- `filter: {column: value}` or `{column: [values]}` keeps only matching rows. At most 200 rows may remain.
+- `split` says which data the numbers come from: `val`, `test` or `none`.
+- A chart has one row per seed. The website draws every row as a dot, plus the mean and spread of each `x` group (`kind: dots`, the default), or the mean only as bars (`kind: bars`). Use dots whenever there is more than one seed, so readers see the spread.
+- Optional chart fields:
+  - `series`: a second column that splits each group, for example the fine-tuning mode
+  - `x_label`
+  - `labels: {raw value: display name}`
+  - `reference: {label, value}`, a line for a number to compare with, such as the paper's
+- `columns` maps CSV column names to the table's headings, in order.
+
+```yaml
+evidence:
+  - type: diagram
+    source: diagrams/method.excalidraw.svg
+    title: How we tested each step against the paper
+    caption: >-
+      Each box is one step of ASF-S, and each step has a check against the paper. Steps 0 to 7
+      match; the red step is where our numbers part ways with the paper's.
+  - type: chart
+    source: runs/20261021-0930-server-step8/results.csv
+    filter: {scope: paper, ft_mode: fc}
+    x: method
+    y: d_acc
+    y_label: Change in accuracy after pruning (points)
+    split: test
+    labels: {pgi_aligned: PGI, random: Random filters}
+    reference: {label: Paper, value: -3.78}
+    title: Accuracy lost after pruning, by method
+    caption: >-
+      Each dot is one seed. Every method sits far below the paper's line, so the gap is not
+      caused by PGI alone.
+```
+
+`promote` copies each item into `showcase/`. Charts and tables keep only the listed columns and
+the filtered rows. Every promoted study also gets a table of its runs, built from the `run.yaml`
+files.
 
 ---
 
@@ -227,16 +279,18 @@ When a study answers its question:
 ## 7. Publishing: `showcase/`
 
 `showcase/` is the curated, public part of a repository. The website reads it **only from the
-`main` branch**. Never edit `showcase/manifest.yaml` or `showcase/studies/*.md` by hand, because
+`main` branch**. Never edit `showcase/manifest.yaml`, `showcase/studies/*.md`, `showcase/figures/` or `showcase/data/` by hand, because
 they are generated.
 
 ```bash
 uv run tools/record.py promote <study-id>
 ```
 
-`promote` does four things:
+`promote` does five things:
 - It writes `showcase/studies/<id>.md` from `study.yaml` and `FINDINGS.md`.
 - It copies the figures that `FINDINGS.md` links to into `showcase/figures/<id>/`.
+- It copies the `evidence` items into `showcase/figures/<id>/` and `showcase/data/<id>/`, and
+  writes `showcase/data/<id>/runs.csv`.
 - The first time a study is closed, it creates a **draft** blog post,
   `showcase/posts/<date>-<id>.md`, with `draft: true`.
 - It regenerates `showcase/manifest.yaml`.

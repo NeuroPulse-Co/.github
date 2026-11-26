@@ -35,3 +35,28 @@ links: []                             # issues, papers, related studies
 #     n_seeds: 3
 #     std: 1.0                        # optional; or ci95: [low, high]
 #     compare: {label: "paper (Table 5)", value: -3.78}
+# Optional: what the study page shows, in reading order (RECORDS.md, Evidence; DIAGRAMS.md)
+# evidence:
+#   - type: diagram
+#     source: diagrams/method.excalidraw.svg
+#     title: "How the study works"
+#     caption: >-
+#       What to look at, and what it means.
+#   - type: chart                     # one dot per row (one row per seed); mean and spread per x
+#     source: runs/<run-id>/results.csv
+#     filter: {budget: 50.0}
+#     x: selector
+#     y: d_acc
+#     y_label: "Change in accuracy (points)"
+#     split: val
+#     reference: {label: "paper", value: -3.78}
+#     title: "Accuracy lost, by selector"
+#     caption: >-
+#       What to look at, and what it means.
+#   - type: table
+#     source: runs/<run-id>/results.csv
+#     columns: {selector: Selector, tier: Recovery, d_acc: "Change (points)"}
+#     split: val
+#     title: "..."
+#     caption: >-
+#       ...

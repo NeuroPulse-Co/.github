@@ -167,10 +167,13 @@ def test_harvest_log_promote_check_roundtrip(repo, tmp_path):
     # promote: figures relinked, manifest + draft post generated, check passes
     close_study(repo, "demo")
     (repo / "studies/demo/FINDINGS.md").write_text(
-        f"It works.\n\n![The figure](runs/{run_dir.name}/fig.png)\n")
+        f"It works. See the [log](LOG.md#top) and [run](runs/{run_dir.name}/run.yaml).\n\n"
+        f"![The figure](runs/{run_dir.name}/fig.png)\n")
     assert rec(repo, "promote", "demo") == 0
     page = (repo / "showcase/studies/demo.md").read_text()
     assert "../figures/demo/" in page and "repo: demo-repo" in page
+    assert "(https://github.com/NeuroPulse-Co/demo-repo/blob/main/studies/demo/LOG.md#top)" in page
+    assert f"/blob/main/studies/demo/runs/{run_dir.name}/run.yaml)" in page
     assert list((repo / "showcase/figures/demo").iterdir())
     post = next((repo / "showcase/posts").glob("*-demo.md"))
     assert "draft: true" in post.read_text()
@@ -210,3 +213,102 @@ def test_legacy_log_entries_are_exempt_but_order_is_checked(repo, capsys):
     log.write_text("# 2025-10-20 — earlier\n\n# 2025-10-21 — later\n")
     assert rec(repo, "check") == 1
     assert "newest first" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- evidence
+
+def _evidence_study(repo):
+    rec(repo, "new", "ev", "--workstream", "W1", "--owner", "Dewmina Wijekoon")
+    d = repo / "studies/ev"
+    (d / "results").mkdir()
+    (d / "results/r.csv").write_text(
+        "scope,method,seed,d_acc,note\n"
+        "paper,pgi,42,-10.4,a\npaper,pgi,43,-10.6,b\npaper,random,42,-15.1,c\nother,pgi,42,1.0,d\n")
+    (d / "results/fig.png").write_bytes(b"png")
+    (d / "diagrams").mkdir()
+    (d / "diagrams/method.excalidraw.svg").write_text(
+        "<svg><!-- svg-source:excalidraw --><!-- payload-type:application/vnd.excalidraw+json -->"
+        "<!-- payload-start -->e30=<!-- payload-end --></svg>")
+    ev = [
+        {"type": "diagram", "source": "diagrams/method.excalidraw.svg", "title": "How it works",
+         "caption": "Read left to right."},
+        {"type": "chart", "source": "results/r.csv", "filter": {"scope": "paper"}, "x": "method",
+         "y": "d_acc", "y_label": "Change in accuracy (points)", "split": "test",
+         "reference": {"label": "paper", "value": -3.78}, "title": "Loss by method",
+         "caption": "Every method sits below the paper's line."},
+        {"type": "table", "source": "results/r.csv", "filter": {"scope": ["paper"]},
+         "columns": {"method": "Method", "seed": "Seed", "d_acc": "Change"}, "split": "test",
+         "title": "All seeds", "caption": "One row per seed."},
+        {"type": "figure", "source": "results/fig.png", "title": "A figure", "caption": "Look here."},
+    ]
+    close_study(repo, "ev")
+    fill_study(repo, "ev", evidence=ev)
+    return d, ev
+
+
+def test_evidence_promote_and_check(repo):
+    d, _ = _evidence_study(repo)
+    assert rec(repo, "promote", "ev") == 0
+    fm, _ = record.split_frontmatter((repo / "showcase/studies/ev.md").read_text())
+    types = [e["type"] for e in fm["evidence"]]
+    assert types == ["diagram", "chart", "table", "figure"]
+    chart, table = fm["evidence"][1], fm["evidence"][2]
+    assert chart["rows"] == [{"method": "pgi", "d_acc": -10.4}, {"method": "pgi", "d_acc": -10.6},
+                             {"method": "random", "d_acc": -15.1}]
+    assert chart["reference"]["value"] == -3.78 and chart["split"] == "test"
+    assert table["columns"][0] == {"key": "method", "label": "Method"} and len(table["rows"]) == 3
+    assert fm["evidence"][0]["src"].endswith(".svg")
+    for e in fm["evidence"]:
+        target = e.get("src") or e.get("data")
+        assert (repo / "showcase/studies" / target).resolve().exists(), target
+    assert rec(repo, "check") == 0
+
+
+@pytest.mark.parametrize("change,expect", [
+    (lambda ev: ev[1].pop("caption"), "evidence[1].caption: missing"),
+    (lambda ev: ev[1].update(y="nope"), "columns ['nope'] are not in"),
+    (lambda ev: ev[1].update(y="note"), "non-numeric"),
+    (lambda ev: ev[1].update(filter={"scope": "none"}), "keeps no rows"),
+    (lambda ev: ev[2].pop("split"), "split"),
+    (lambda ev: ev[3].update(source="results/r.csv"), "must be an image"),
+    (lambda ev: ev[0].update(type="poster"), "must be one of"),
+])
+def test_evidence_errors(repo, capsys, change, expect):
+    _, ev = _evidence_study(repo)
+    change(ev)
+    fill_study(repo, "ev", evidence=ev)
+    assert rec(repo, "check") == 1
+    assert expect in capsys.readouterr().out
+
+
+def test_diagram_must_embed_its_scene(repo, capsys):
+    d, ev = _evidence_study(repo)
+    assert rec(repo, "check") == 0
+    (d / "diagrams/method.excalidraw.svg").write_text("<svg></svg>")
+    assert rec(repo, "check") == 1
+    assert "no embedded Excalidraw scene" in capsys.readouterr().out
+    (d / "diagrams/plain.svg").write_text("<svg></svg>")
+    ev[0]["source"] = "diagrams/plain.svg"
+    fill_study(repo, "ev", evidence=ev)
+    assert rec(repo, "check") == 1
+    assert "must be a .excalidraw.svg file" in capsys.readouterr().out
+
+
+def test_promote_writes_runs_table(repo):
+    rec(repo, "new", "demo", "--workstream", "W1", "--owner", "Dewmina Wijekoon")
+    fill_study(repo, "demo")
+    rec(repo, "run", "demo", "--tag", "a", "--seed", "7", "--", sys.executable, "-c", "print(1)")
+    rec(repo, "harvest", "--from", str(Path(record.os.environ["NP_OUTPUTS"])))
+    assert rec(repo, "promote", "demo") == 0
+    fm, _ = record.split_frontmatter((repo / "showcase/studies/demo.md").read_text())
+    assert len(fm["runs"]) == 1 and fm["runs"][0]["seed"] == 7 and fm["runs"][0]["exit_code"] == 0
+    assert (repo / "showcase/data/demo/runs.csv").exists()
+
+
+def test_tool_upgrade_does_not_stale_the_manifest(repo):
+    rec(repo, "new", "demo", "--workstream", "W1", "--owner", "Dewmina Wijekoon")
+    fill_study(repo, "demo")
+    assert rec(repo, "promote", "demo") == 0
+    mf = repo / "showcase/manifest.yaml"
+    mf.write_text(mf.read_text().replace(f"record.py {record.VERSION}", "record.py 0.9.0"))
+    assert rec(repo, "check") == 0
